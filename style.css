@@ -1,0 +1,64 @@
+/* Basic styling for the whole app */
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+/* Styling for the player controls at the top */
+.player-controls {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #f8f8f8;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 10;
+}
+
+/* Large note display area in the center */
+.note-display {
+  font-size: 48px;
+  text-align: center;
+  margin-top: 60px;
+  height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Input box for jumping to a specific note */
+#jumpToInput {
+  width: 100px;
+  padding: 5px;
+}
+
+/* Styling for each note box on the screen */
+.note-box {
+  display: inline-block;
+  min-width: 200px;
+  text-align: center;
+  padding: 0 20px;
+  margin: 0 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.05);
+}
+
+/* Container for notes in a column format */
+.note-container {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 10px;
+  margin-top: -60px;
+}
+
+/* Label for each note box */
+.box-label {
+  font-size: 24px;
+  opacity: 0.7;
+  margin-bottom: 5px;
+}

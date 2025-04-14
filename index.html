@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Musical Note Generator</title>
+  <link rel="stylesheet" href="style.css" />
+  
+
+  <!-- Link to manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Icons for iOS and fallback -->
+  <link rel="icon" href="/icons/icon.png" />
+  <link rel="apple-touch-icon" href="/icons/icon.png" />
+
+  <!-- Theme color for mobile browsers -->
+  <meta name="theme-color" content="#000000" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .player-controls {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #f8f8f8;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 10;
+    }
+    .note-display {
+      font-size: 48px;
+      text-align: center;
+      margin-top: 60px;
+      height: calc(100vh - 120px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #jumpToInput {
+      width: 100px;
+      padding: 5px;
+    }
+    .note-box {
+      display: inline-block;
+      min-width: 200px;
+      text-align: center;
+      padding: 0 20px;
+      margin: 0 10px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.05);
+    }
+    .note-container {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 10px;
+      margin-top: -60px;
+    }
+    .box-label {
+      font-size: 24px;
+      opacity: 0.7;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="player-controls">
+    <button id="playPauseBtn">Play</button>
+    <input type="number" id="jumpToInput" placeholder="Jump to...">
+    <button id="jumpBtn">Jump</button>
+    <span id="currentNumber"></span>
+  </div>
+
+  <div class="note-display" id="noteDisplay"></div>
+
+  <script src="script.js"></script>
+
+  <!-- Register service worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('Service Worker registered:', reg.scope))
+          .catch(err => console.error('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>

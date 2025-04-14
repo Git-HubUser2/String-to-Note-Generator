@@ -1,0 +1,349 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musical Note Generator</title>
+    <link rel="manifest" href="/manifest.json" />
+
+<!-- This section controls the visual aspects of the script -->
+   <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .player-controls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #f8f8f8;
+            padding: 10px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .note-display {
+            font-size: 48px;
+            text-align: center;
+            margin-top: 60px; 
+            height: calc(100vh - 120px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #jumpToInput {
+            width: 100px;
+            padding: 5px;
+        }
+        .note-box {
+            display: inline-block;
+            min-width: 200px;
+            text-align: center;
+            padding: 0 20px;
+            margin: 0 10px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.05);
+        }
+        .note-container {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 10px;
+            margin-top: -60px; 
+        }
+        .box-label {
+            font-size: 24px;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-controls">
+        <button id="playPauseBtn">Play</button>
+        <input type="number" id="jumpToInput" placeholder="Jump to...">
+        <button id="jumpBtn">Jump</button>
+        <span id="currentNumber"></span>
+    </div>
+    
+    <div class="note-display" id="noteDisplay"></div>
+    <!-- This section controls the note mapping table from the reference table -->
+
+    <script>
+        const noteMapping = {
+            "-9": "G#",
+            "-8": "A#",
+            "-7": "E",
+            "-6": "F",
+            "-5": "G",
+            "-4": "B",
+            "-3": "A",
+            "-2": "C",
+            "-1": "D",
+            "-0": "F#",
+            "0": "F#",
+            "1": "C",
+            "2": "D",
+            "3": "E",
+            "4": "F",
+            "5": "G",
+            "6": "A",
+            "7": "B",
+            "8": "C#",
+            "9": "D#"
+        };
+        
+        const octaveMapping = {
+            "-9": 1,
+            "-8": 2,
+            "-7": 7,
+            "-6": 2,
+            "-5": 3,
+            "-4": 7,
+            "-3": 4,
+            "-2": 6,
+            "-1": 5,
+            "-0": 4, 
+            "0": 4,
+            "1": 1,
+            "2": 2,
+            "3": 3,
+            "4": 4,
+            "5": 4,
+            "6": 4,
+            "7": 5,
+            "8": 6,
+            "9": 7
+        };
+        
+        const durationMapping = {
+            "-9": 1,
+            "-8": 1,
+            "-7": 1,
+            "-6": 3,
+            "-5": 2,
+            "-4": 4,
+            "-3": 0.5,
+            "-2": 0.5,
+            "-1": 0.5,
+            "-0": 1, 
+            "0": 1,
+            "1": 1,
+            "2": 1,
+            "3": 1,
+            "4": 2,
+            "5": 3,
+            "6": 0.5,
+            "7": 0.5,
+            "8": 0.5,
+            "9": 0.5
+        };
+        
+        const volumeMapping = {
+            "-9": 1,
+            "-8": 1,
+            "-7": 5,
+            "-6": 5,
+            "-5": 5,
+            "-4": 5,
+            "-3": 10,
+            "-2": 10,
+            "-1": 10,
+            "-0": 5, 
+            "0": 5,
+            "1": 1,
+            "2": 1,
+            "3": 1,
+            "4": 5,
+            "5": 5,
+            "6": 5,
+            "7": 5,
+            "8": 10,
+            "9": 10
+        };
+
+        // Function to calculate the string using the formula
+        function calculateValue(b2) {
+            b2 = Number(b2);
+            const sineComponent = Math.sin(b2/5) * 500;
+            const modifiedX = b2 + sineComponent;
+            let val = ((modifiedX * 12347) * 0.8765 + 1000) % 10000;
+            if (val < 1000) {
+                val += 1000;
+            }
+            return Math.floor(val);
+        }
+
+        // Function to convert the calculated string into musical note values
+        function interpretValue(value) {
+            const isNegative = value < 0;
+            const absValue = Math.abs(value);
+            let valueStr;
+            if (absValue < 1000) {
+                valueStr = (isNegative ? '-0' : '0') + absValue.toString().padStart(3, '0');
+            } else {
+                valueStr = (isNegative ? '-' : '') + absValue.toString().padStart(4, '0');
+            }
+            let firstDigit;
+            if (valueStr.startsWith('-')) {
+                const digit = valueStr.charAt(1);
+                firstDigit = '-' + digit;
+            } else {
+                firstDigit = valueStr.charAt(0);
+            }
+            const secondDigit = valueStr.startsWith('-') ? valueStr.charAt(2) : valueStr.charAt(1);
+            const thirdDigit = valueStr.startsWith('-') ? valueStr.charAt(3) : valueStr.charAt(2);
+            const fourthDigit = valueStr.startsWith('-') ? valueStr.charAt(4) : valueStr.charAt(3);
+            
+            const note = noteMapping[firstDigit];
+            const octave = octaveMapping[secondDigit] || 1;
+            const duration = durationMapping[thirdDigit] || 1;
+            const volume = volumeMapping[fourthDigit] || 5;
+            
+            return {
+                input: "",
+                generatedValue: valueStr,
+                firstDigit: firstDigit,
+                secondDigit: secondDigit,
+                thirdDigit: thirdDigit,
+                fourthDigit: fourthDigit,
+                note: note,
+                octave: octave,
+                duration: duration,
+                volume: volume
+            };
+        }
+
+        // Process data in chunks to avoid browser freezing (optimization)
+        function processInChunks(startIndex, totalItems, chunkSize, processFunction, onComplete) {
+            const results = [];
+            function processChunk() {
+                const endIndex = Math.min(startIndex + chunkSize, totalItems);
+                for (let i = startIndex; i <= endIndex; i++) {
+                    results.push(processFunction(i));
+                }
+                if (endIndex < totalItems) {
+                    startIndex = endIndex + 1;
+                    setTimeout(processChunk, 0);
+                } else {
+                    onComplete(results);
+                }
+            }
+            processChunk();
+        }
+
+        // Function to generate color based on numeric value, used to make it easier to play
+        function getColorForValue(value) {
+            const num = parseInt(value.toString().replace('-', ''));
+            if (num <= 4) {
+                const blueIntensity = Math.max(0, 255 - (num * 40));
+                return `rgb(0, 0, ${blueIntensity})`;
+            } else if (num <= 6) {
+                return `rgb(128, 0, 128)`; // Purple
+            } else {
+                const redIntensity = Math.min(255, (num - 6) * 85);
+                return `rgb(${redIntensity}, 0, 0)`;
+            }
+        }
+
+        // Player control variables, i.e. play/pause, jump to note
+        let currentIndex = 0;
+        let isPlaying = false;
+        let timeoutId = null;
+        let generatedNotes = [];
+
+        function displayCurrentNote() {
+            if (currentIndex >= generatedNotes.length) return;
+            const item = generatedNotes[currentIndex];
+            const octaveColor = getColorForValue(item.secondDigit);
+            const durationColor = getColorForValue(item.thirdDigit);
+            const volumeColor = getColorForValue(item.fourthDigit);
+            
+            const formattedStr = `
+                <span style="font-size: 128px; font-weight: bold">
+                    <div class="note-container">
+                        <span class="box-label">Note</span>
+                        <span class="note-box">${item.note}</span>
+                    </div>
+                    <div class="note-container">
+                        <span class="box-label">Octave</span>
+                        <span class="note-box" style="color: ${octaveColor}">${item.octave}</span>
+                    </div>
+                    <div class="note-container">
+                        <span class="box-label">Duration</span>
+                        <span class="note-box" style="color: ${durationColor}">${item.duration}s</span>
+                    </div>
+                    <div class="note-container">
+                        <span class="box-label">Volume</span>
+                        <span class="note-box" style="color: ${volumeColor}">${item.volume}</span>
+                    </div>
+                </span>`;
+            
+            document.getElementById('noteDisplay').innerHTML = formattedStr;
+            document.getElementById('currentNumber').textContent = `Current: ${item.input}`;
+        }
+
+        function playNext() {
+            if (!isPlaying) return;
+            displayCurrentNote();
+            const currentDuration = generatedNotes[currentIndex].duration + 1.5;
+            timeoutId = setTimeout(() => {
+                currentIndex++;
+                if (currentIndex >= generatedNotes.length) {
+                    currentIndex = 0;
+                }
+                playNext();
+            }, currentDuration * 1000);
+        }
+
+        document.getElementById('playPauseBtn').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? 'Pause' : 'Play';
+            if (isPlaying) {
+                playNext();
+            } else if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+        });
+
+        document.getElementById('jumpBtn').addEventListener('click', function() {
+            const jumpTo = parseInt(document.getElementById('jumpToInput').value);
+            if (jumpTo >= 1 && jumpTo <= 1800) {
+                currentIndex = jumpTo - 1;
+                if (!isPlaying) {
+                    displayCurrentNote();
+                }
+            }
+        });
+
+        // Generate the musical note data and initialize display
+        function generateNotes() {
+            processInChunks(1, 1800, 50, function(i) {
+                const calculatedValue = calculateValue(i);
+                const interpretedValue = interpretValue(calculatedValue);
+                interpretedValue.input = i;
+                return interpretedValue;
+            }, function(results) {
+                generatedNotes = results;
+                displayCurrentNote(); // Show first note
+            });
+        }
+
+        // Generate notes immediately when page loads
+        generateNotes();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js').then((registration) => {
+              console.log('Service Worker registered with scope:', registration.scope);
+            }).catch((error) => {
+              console.log('Service Worker registration failed:', error);
+            });
+          });
+        }
+      </script>
+</body>
+</html>

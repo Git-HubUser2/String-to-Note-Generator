@@ -1,0 +1,16 @@
+{
+  "name": "Sound Experiment",
+  "short_name": "SoundExp",
+  "description": "An experimental sound application",
+  "start_url": "/Sound_Experiment.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/icons/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
